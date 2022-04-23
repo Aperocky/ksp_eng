@@ -47,9 +47,16 @@ UNTIL RUNMODE=0 {
         SET RUNMODE TO 5.
     }
 
-    ELSE IF RUNMODE = 5 {
+    ELSE IF RUNMODE=5 {
+        WAIT 1.
+        LOCAL WAITTIME TO (33 + 180 - SHIP:GEOPOSITION:LNG)/360 * ORBIT:PERIOD.
+        WARP_TO_TIME(WAITTIME).
+        SET RUNMODE TO 6.
+    }
+
+    ELSE IF RUNMODE=6 {
         DEORBIT_KERBIN().
-        WAIT 3.
+        WAIT 1.
         SET WARP TO 3.
         IF SHIP:ALTITUDE < 70000 {
             STAGE. WAIT 1.
