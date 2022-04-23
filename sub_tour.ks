@@ -1,5 +1,5 @@
 // This is a sub-orbital touring vessel
-RUNONCEPATH("LIB.KS").
+RUNONCEPATH("LIB/BASE_LIB.KS").
 CLEARSCREEN.
 
 SET RUNMODE TO 1.
