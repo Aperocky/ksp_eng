@@ -26,8 +26,9 @@ UNTIL RUNMODE=0 {
 
     ELSE IF RUNMODE=2 {
         SET TVAL TO GET_THROTTLE(30).
-        SET SVAL TO HEADING(90, PITCH).
+        SET SVAL TO HEADING(90, PITCH, -90).
         IF SHIP:APOAPSIS > 85000 {
+            UNLOCK STEERING.
             SET RUNMODE TO 3.
         }
     }
@@ -49,7 +50,8 @@ UNTIL RUNMODE=0 {
 
     ELSE IF RUNMODE=5 {
         WAIT 1.
-        LOCAL WAITTIME TO (33.3 + 180 - SHIP:GEOPOSITION:LNG)/360 * ORBIT:PERIOD.
+        SET DEORBIT_LNG TO 33.3.
+        LOCAL WAITTIME TO (DEORBIT_LNG + 180 - SHIP:GEOPOSITION:LNG)/360 * ORBIT:PERIOD.
         WARP_TO_TIME(WAITTIME).
         SET RUNMODE TO 6.
     }
@@ -59,7 +61,9 @@ UNTIL RUNMODE=0 {
         WAIT 1.
         SET WARP TO 3.
         IF SHIP:ALTITUDE < 70000 {
-            STAGE. WAIT 1.
+            IF NOT SHIP_NAME:CONTAINS("LARGE") {
+                STAGE. WAIT 1.
+            }
             SET RUNMODE TO 0.
         }
     }
