@@ -6,12 +6,12 @@ FUNCTION GET_THROTTLE {
 
 FUNCTION PRINT_PARAMS {
     PARAMETER OPTIONAL_ONE IS "".
-    PRINT "ALTITUDE:   " + ROUND(SHIP:ALTITUDE) + "  METERS    " AT (5,5).
-    PRINT "APOAPSIS:   " + ROUND(SHIP:APOAPSIS) + "  METERS    " AT (5,6).
-    PRINT "PERIAPSIS:  " + ROUND(SHIP:PERIAPSIS) + "  METERS    " AT (5,7).
-    PRINT "CLIMB RATE: " + ROUND(SHIP:VERTICALSPEED) + "  M/S" AT (5,8).
-    PRINT "GRND SPEED: " + ROUND(SHIP:GROUNDSPEED*3.6) + "  KPH" AT (5,9).
-    PRINT OPTIONAL_ONE AT (5, 10).
+    PRINT "ALTITUDE:   " + ROUND(SHIP:ALTITUDE) + "  METERS    " AT (5,2).
+    PRINT "APOAPSIS:   " + ROUND(SHIP:APOAPSIS) + "  METERS    " AT (5,3).
+    PRINT "PERIAPSIS:  " + ROUND(SHIP:PERIAPSIS) + "  METERS    " AT (5,4).
+    PRINT "CLIMB RATE: " + ROUND(SHIP:VERTICALSPEED) + "  M/S" AT (5,5).
+    PRINT "GRND SPEED: " + ROUND(SHIP:GROUNDSPEED*3.6) + "  KPH" AT (5,6).
+    PRINT OPTIONAL_ONE AT (5, 7).
 }
 
 FUNCTION DEORBIT_KERBIN {
@@ -25,25 +25,64 @@ FUNCTION DEORBIT_KERBIN {
 
 FUNCTION PARACHUTE_LANDING {
     PARAMETER DROGUE IS TRUE.
+
     SAS OFF.
     LOCK STEERING TO RETROGRADE.
     WAIT 1.
+    LOCAL RUNMODE TO 10.
     SET WARP TO 3.
-    WAIT UNTIL SHIP:ALTITUDE < 35000.
-    SET WARP TO 0.
-    WAIT 1.
-    ACT_ON_PARTS("SERVICE.BAY", "OPEN").
-    IF DROGUE {
-        WAIT UNTIL ALT:RADAR < 5000.
-        STAGE.
+    CLEARSCREEN.
+
+    UNTIL RUNMODE=0 {
+
+        IF RUNMODE=10 {
+            IF SHIP:ALTITUDE < 35000 {
+                SET WARP TO 0.
+                ACT_ON_PARTS("SERVICE.BAY", "OPEN").
+                SET RUNMODE TO 11.
+            }
+        }
+
+        ELSE IF RUNMODE=11 {
+            IF ALT:RADAR < 5000 AND DROGUE {
+                STAGE.
+                SET RUNMODE TO 12.
+            }
+            IF ALT:RADAR < 2000 {
+                STAGE.
+                SET RUNMODE TO 13.
+            }
+        }
+
+        ELSE IF RUNMODE=12 {
+            IF ALT:RADAR < 2000 {
+                STAGE.
+                SET RUNMODE TO 13.
+            }
+        }
+
+        ELSE IF RUNMODE=13 {
+            IF ABS(SHIP:VERTICALSPEED) < 10 {
+                SET WARP TO 3.
+                SET RUNMODE TO 14.
+            }
+        }
+
+        ELSE IF RUNMODE=14 {
+            IF ALT:RADAR < 20 {
+                SET WARP TO 0.
+                SET RUNMODE TO 0.
+            }
+        }
+
+        PRINT "ALTITUDE:   " + ROUND(ALT:RADAR) + " METERS    " AT (5,2).
+        PRINT "SINK RATE:   " + ROUND(-SHIP:VERTICALSPEED) + " M/S    " AT (5,3).
+        PRINT "GRND SPEED:  " + ROUND(SHIP:GROUNDSPEED*3.6) + " KMH    " AT (5,4).
+        PRINT "RUNMODE:  " + RUNMODE AT (5,6).
+        WAIT 0.
     }
-    WAIT UNTIL ALT:RADAR < 2000.
-    STAGE.
-    WAIT UNTIL ALT:RADAR < 700.
-    SET WARP TO 3.
-    WAIT UNTIL ALT:RADAR < 20.
-    SET WARP TO 0.
     WAIT 5.
+    CLEARSCREEN.
 }
 
 // GRAVITY TURN PITCH
@@ -61,9 +100,10 @@ FUNCTION GET_PITCH_KERBIN {
 }
 
 FUNCTION CIRCULARIZE {
-    // USE DUMMY CIRCULARIZATION TECHNIQUE BY KEEPING
+    // USE RAW CIRCULARIZATION TECHNIQUE BY KEEPING APOAPSIS CLOSE
     // ONLY USE ON ASCENT!
     // SKID TO APOAPSIS
+    PARAMETER ERR_ECC IS 100.
     WARP_TO_TIME(ETA:APOAPSIS - 10).
 
     LOCAL PITCH TO 0.
@@ -75,7 +115,7 @@ FUNCTION CIRCULARIZE {
 
     WAIT ETA:APOAPSIS.
 
-    UNTIL (SHIP:ALTITUDE - SHIP:PERIAPSIS) < 100 {
+    UNTIL (SHIP:ALTITUDE - SHIP:PERIAPSIS) < ERR_ECC {
         IF STAGE:LIQUIDFUEL < 1 {
             STAGE. WAIT 0.
         }
@@ -87,4 +127,133 @@ FUNCTION CIRCULARIZE {
     }
     UNLOCK STEERING.
     UNLOCK THROTTLE.
+}
+
+FUNCTION APPROACH {
+    // APPROACH TARGET AND PARK NEXT TO IT.
+    IF NOT HASTARGET {
+        PRINT("NO TARGET").
+        RETURN.
+    }
+
+    SAS OFF.
+    CLEARSCREEN.
+    LOCAL TVAL TO 0.
+    LOCAL SVAL TO SHIP:FACING:FOREVECTOR.
+    LOCAL TARGET_DIRECTION TO TARGET:POSITION:NORMALIZED.
+    LOCAL TARGET_RUNMODE TO 20.
+    LOCAL TARGET_REL_SPEED TO 0.
+    LOCAL RUNMODE TO 20.
+    LOCK THROTTLE TO TVAL.
+    LOCK STEERING TO SVAL.
+    UNTIL RUNMODE=0 {
+
+        LOCAL VEL TO SHIP:VELOCITY:ORBIT - TARGET:VELOCITY:ORBIT.
+        LOCAL VEL_P TO VXCL(TARGET:POSITION:NORMALIZED, VEL).
+        LOCAL VEL_ANG TO VANG(TARGET:POSITION, VEL).
+        LOCAL REL_T TO TARGET:POSITION:MAG / VEL:MAG.
+        LOCAL DIST TO TARGET:POSITION:MAG.
+        LOCAL PARK_DIST TO DIST * SIN(VEL_ANG).
+        LOCAL MAX_ACC TO SHIP:MAXTHRUST/SHIP:MASS.
+
+        IF RUNMODE=20 {
+            // MOVE TO APPROPRIATE RUNMODES.
+            IF DIST > 10000 {
+                SET RUNMODE TO 20.
+            } ELSE IF DIST > 1000 { // COAST PHASE.
+                SET RUNMODE TO 21.
+            } ELSE { // PARK PHASE
+                SET RUNMODE TO 22.
+            }
+        }
+
+        ELSE IF RUNMODE=21 {
+            IF VEL_ANG > 5 {
+                SET TARGET_DIRECTION TO -VEL_P.
+                SET TARGET_RUNMODE TO 26.
+                SET RUNMODE TO 25.
+            } ELSE IF VEL:MAG > DIST/25 {
+                SET TARGET_DIRECTION TO -VEL.
+                SET TARGET_REL_SPEED TO MAX(30, DIST/100).
+                SET TARGET_RUNMODE TO 27.
+                SET RUNMODE TO 25.
+            } ELSE IF VEL:MAG < 20 {
+                SET TARGET_DIRECTION TO TARGET:POSITION:NORMALIZED.
+                SET TARGET_REL_SPEED TO MIN(30, DIST/100).
+                SET TARGET_RUNMODE TO 27.
+                SET RUNMODE TO 25.
+            } ELSE IF VEL:MAG < DIST/200 {
+                SET TARGET_DIRECTION TO TARGET:POSITION:NORMALIZED.
+                SET TARGET_REL_SPEED TO MIN(DIST/100, 80).
+                SET TARGET_RUNMODE TO 27.
+                SET RUNMODE TO 25.
+            } ELSE IF DIST < 1000 {
+                SET RUNMODE TO 22.
+            }
+        }
+
+        ELSE IF RUNMODE=22 {
+            SET SVAL TO -VEL.
+            LOCAL REST_DIST TO DIST * COS(VEL_ANG).
+            LOCAL SKID_DIST TO 0.5 * MAX_ACC * (VEL:MAG/MAX_ACC)^2.
+            IF VEL:MAG < 1 {
+                SET RUNMODE TO 0.
+            }
+            IF REST_DIST < SKID_DIST+VEL:MAG {
+                SET RUNMODE TO 28.
+            }
+        }
+
+        ELSE IF RUNMODE=25 {
+            // ALIGN TO DIRECTION
+            SET SVAL TO TARGET_DIRECTION.
+            IF VANG(SHIP:FACING:FOREVECTOR, TARGET_DIRECTION) < 3 {
+                SET RUNMODE TO TARGET_RUNMODE.
+            }
+        }
+
+        ELSE IF RUNMODE=26 {
+            // REMOVE SIDE VELOCITY.
+            SET SVAL TO -VEL_P.
+            SET TVAL TO MIN(VEL_P:MAG/MAX_ACC, 1).
+            IF VANG(SHIP:FACING:FOREVECTOR, -VEL_P) > 20 OR VEL_P:MAG < 0.5 {
+                SET TVAL TO 0.
+                SET RUNMODE TO 20.
+            }
+        }
+
+        ELSE IF RUNMODE=27 {
+            // RELATIVE SPEED TWEAKING
+            SET SVAL TO TARGET_DIRECTION.
+            LOCAL DIFFV TO ABS(TARGET_REL_SPEED - VEL:MAG).
+            SET TVAL TO MIN(DIFFV/MAX_ACC, 1).
+            IF VEL_ANG > 20 OR DIFFV < 0.2 {
+                SET TVAL TO 0.
+                SET RUNMODE TO 20.
+            }
+        }
+
+        ELSE IF RUNMODE=28 {
+            // KILL SPEED
+            SET SVAL TO -VEL.
+            SET TVAL TO MIN(VEL:MAG/MAX_ACC, 1).
+            IF VANG(SHIP:FACING:FOREVECTOR, -VEL) > 10 {
+                SET TVAL TO 0.
+            }
+            IF VEL:MAG < 0.2 {
+                SET RUNMODE TO 0.
+            }
+        }
+
+        PRINT "TARGET DISTANCE:   " + ROUND(DIST) + " METERS    " AT (5,2).
+        PRINT "RELATIVE VELOCITY:   " + ROUND(VEL:MAG) + " M/S    " AT (5,3).
+        PRINT "VELOCITY ANGLE:   " + ROUND(VEL_ANG, 1) + " DEGREES    " AT (5,4).
+        PRINT "ENCOUNTER DISTANCE:   " + ROUND(PARK_DIST) + " METERS    " AT (5,5).
+        PRINT "RAW ETA:  " + ROUND(REL_T) + " SECONDS    " AT (5,6).
+        PRINT "RUNMODE:  " + RUNMODE AT (5,7).
+        WAIT 0.
+    }
+    UNLOCK STEERING.
+    UNLOCK THROTTLE.
+    SAS ON.
 }
