@@ -45,7 +45,7 @@ FUNCTION PARACHUTE_LANDING {
 
         ELSE IF RUNMODE=11 {
             IF ALT:RADAR < 5000 AND DROGUE {
-                STAGE.
+                ACT_ON_PARTS("DROGUE", "DEPLOY_CHUTE").
                 SET RUNMODE TO 12.
             }
             IF ALT:RADAR < 2000 {

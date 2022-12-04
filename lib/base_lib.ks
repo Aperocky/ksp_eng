@@ -38,7 +38,6 @@ FUNCTION ACT_ON_PART {
         RETURN.
     }
     IF ACTION="AFTERBURNER" {
-        PRINT PART:MODE.
         IF PART:MODE="DRY" {
             PART:TOGGLEMODE.
             WAIT UNTIL PART:MODE="WET".
@@ -46,12 +45,15 @@ FUNCTION ACT_ON_PART {
         RETURN.
     }
     IF ACTION="AFTERBURNER_OFF" {
-        PRINT PART:MODE.
         IF PART:MODE="WET" {
             PART:TOGGLEMODE.
             WAIT UNTIL PART:MODE="DRY".
         }
         RETURN.
+    }
+    IF ACTION="DEPLOY_CHUTE" {
+        LOCAL PARACHUTE TO PART:GETMODULE("ModuleParachute").
+        PARACHUTE:DOEVENT("deploy chute").
     }
     LOCAL MODULES TO PART:ALLMODULES.
     FOR MODULE IN MODULES {

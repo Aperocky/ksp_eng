@@ -114,8 +114,9 @@ FUNCTION AUTOPILOT_TO_WAYPOINT {
             IF MAP_DIST > 40000 {
                 SET HEIGHT TO 15000.
             } ELSE {
+                SET WARP TO 0.
                 SET HEIGHT TO WAYPOINT:ALTITUDE.
-            }        
+            }
         }
         // END FULLAUTO BLOCK.
         LOCAL COMPASS TO COMPASS_FOR().
@@ -152,6 +153,9 @@ FUNCTION AUTOPILOT_TO_WAYPOINT {
 }
 
 FUNCTION TAKEOFF {
+    IF ALT:RADAR > 100 {
+        RETURN.
+    }
     PARAMETER TARGET_ALT IS 1000.
     SAS OFF.
     BRAKES OFF.
