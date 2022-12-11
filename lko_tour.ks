@@ -70,9 +70,11 @@ UNTIL RUNMODE=0 {
             CIRCULARIZE().
         }
         RCS OFF.
+        WAIT 1.
         IF GET_PARTS("FAIRING"):LENGTH > 0 AND STAGE_WHEN_ORBIT {
             STAGE.
         }
+        ACT_ON_PARTS("VOLTAIC", "EXTEND").
         SET RUNMODE TO 5.
     }
 
@@ -89,12 +91,12 @@ UNTIL RUNMODE=0 {
 
     ELSE IF RUNMODE=6 {
         DEORBIT_KERBIN().
+        ACT_ON_PARTS("VOLTAIC", "RETRACT").
         WAIT 1.
         SET WARP TO 3.
         IF SHIP:ALTITUDE < 70000 {
-            IF NOT SHIP_NAME:CONTAINS("LARGE") {
-                STAGE. WAIT 1.
-            }
+            ACT_ON_PARTS("SEPARATOR", "DECOUPLE").
+            ACT_ON_PARTS("DECOUPLER", "DECOUPLE").
             SET RUNMODE TO 7.
         }
     }
