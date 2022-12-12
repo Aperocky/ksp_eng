@@ -79,17 +79,6 @@ UNTIL RUNMODE=0 {
     }
 
     ELSE IF RUNMODE=5 {
-        WAIT 1.
-        LOCAL DEORBIT_LNG TO 33.3.
-        IF SHIP_NAME:CONTAINS("LARGE") {
-            SET DEORBIT_LNG TO 30.
-        }
-        LOCAL WAITTIME TO (DEORBIT_LNG + 180 - SHIP:GEOPOSITION:LNG)/360 * ORBIT:PERIOD.
-        WARP_TO_TIME(WAITTIME).
-        SET RUNMODE TO 6.
-    }
-
-    ELSE IF RUNMODE=6 {
         DEORBIT_KERBIN().
         ACT_ON_PARTS("VOLTAIC", "RETRACT").
         WAIT 1.
@@ -101,7 +90,7 @@ UNTIL RUNMODE=0 {
         }
     }
 
-    ELSE IF RUNMODE=7 {
+    ELSE IF RUNMODE=6 {
         PARACHUTE_LANDING().
         SET RUNMODE TO 0.
     }
