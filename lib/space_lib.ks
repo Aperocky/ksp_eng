@@ -187,10 +187,13 @@ FUNCTION APPROACH {
         LOCAL MAX_ACC TO SHIP:MAXTHRUST/SHIP:MASS.
 
         IF RUNMODE=20 {
-            // MOVE TO APPROPRIATE RUNMODES.
+            // WARP UNTIL CLOSE.
             IF DIST < 15000 {
                 SET WARP TO 1.
+            } ELSE {
+                SET WARP TO 3.
             }
+            // MOVE TO APPROPRIATE RUNMODES.
             IF DIST > 10000 {
                 SET RUNMODE TO 20.
             } ELSE IF DIST > 1000 { // COAST PHASE.
