@@ -50,3 +50,21 @@ run craft("node").
 ```
 
 This execute the next node encounter down to the accuracy of 0.1m/s deltaV.
+
+### `craft` Command
+
+This command are for spaceflight operations.
+
+| Command | Arguments | Description |
+| --- | --- | --- |
+| `node` | `run craft("node"[, $allow_stage(true)])` | Execute the next manuever node, default to allow staging if fuel runs out in the middle |
+| `circ` | `run craft("circ"[, $is_ap(true)[, $run(false)]])` | Creates a node to circularize, default to circularize at apoapsis, and can optionally warp forward and execute the node if run command is `true` |
+| `parachute` | `run craft("parachute"[, $service_bay(true)[, $parachute(true]])` | Land from upper atmosphere, `$service_bay` opens service bay to help aerodynamics, and `$parachute` would stage parachutes, if no parachutes exist, it attempts a suicide burn to land. |
+| `deorbit` | `run craft("deorbit"[, $service_bay(true)[, $parachute(true)]])` | Land from kerbin orbit, it aims for KSC and engage `parachute` command after entering atmosphere |
+| `set_apoapsis[periapsis]` | `run craft("set_apoapsis", $altitude[, $run(false)])` | Set apoapsis (or periapsis) by creating a manuever node at periapsis (or apoapsis), can pass in a `$run` parameter to warp and execute the manuever node. |
+| `suicide_burn` | `run craft("suicide_burn")` | Suicide burn and land on the surface. Works for any celestial body provided you have enough thrust and dV |
+| `hohmann` | `run craft("hohmann", $altitude, $wait)` | Runs a hohmann transfer to orbit of another altitude, wait should be at least `60` |
+| `hohmann_target` | `run craft("hohmann_target"[, $angdiff(0)[, $run(false)]])` | Automatically create a hohmann transfer to intersect with the target object. This assume the target orbit is circular. `$angdiff` parameter is by default 0, which means it will intersect the orbit with phase of 0 degrees, useful for going to a space station, set it to `60` or `90` to build a constellation of satellite that are spaced 60/90 degrees apart. `$run` will execute the hohmann insertion manuever |
+| `match_inc` | `run craft("match_inc"[, $run(false)])` | Matches inclination of the target orbit. |
+| `parts_act` | `run craft("parts_act", $part_name, $action_name)` | Perform specified action on parts, parts name can be abbreviations and will be used against all parts that contain the string, for instance `run craft("parts_act", "voltaic", "extend").` will extend all photovoltaic panels on the spacecraft |
+
