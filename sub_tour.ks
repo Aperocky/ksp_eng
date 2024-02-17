@@ -24,14 +24,14 @@ UNTIL RUNMODE=0 {
     ELSE IF RUNMODE=2 {
         SET SVAL TO HEADING(90,65).
         SET TVAL TO 1.
-        IF SHIP:APOAPSIS > 75000 {
+        IF SHIP:APOAPSIS > 80000 {
             SET TVAL TO 0.
             SET RUNMODE TO 3.
         }
     }
 
     ELSE IF RUNMODE=3 {
-        UNLOCK STEERING.
+        LOCK STEERING TO PROGRADE.
         SET WARP TO 3.
         IF SHIP:ALTITUDE > 70000 {
             SET WARP TO 0.
@@ -45,6 +45,7 @@ UNTIL RUNMODE=0 {
     ELSE IF RUNMODE=4 {
         SET WARP TO 2.
         IF SHIP:ALTITUDE < 70000 {
+            UNLOCK STEERING.
             SET RUNMODE TO 0.
         }
     }
