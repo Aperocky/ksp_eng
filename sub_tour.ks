@@ -31,7 +31,8 @@ UNTIL RUNMODE=0 {
     }
 
     ELSE IF RUNMODE=3 {
-        LOCK STEERING TO PROGRADE.
+        UNLOCK STEERING.
+        WAIT 1.
         SET WARP TO 3.
         IF SHIP:ALTITUDE > 70000 {
             SET WARP TO 0.
@@ -43,9 +44,7 @@ UNTIL RUNMODE=0 {
     }
 
     ELSE IF RUNMODE=4 {
-        SET WARP TO 2.
         IF SHIP:ALTITUDE < 70000 {
-            UNLOCK STEERING.
             SET RUNMODE TO 0.
         }
     }

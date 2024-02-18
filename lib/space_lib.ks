@@ -14,6 +14,13 @@ FUNCTION PRINT_PARAMS {
     PRINT OPTIONAL_ONE AT (5, 7).
 }
 
+FUNCTION DISPLAY_STATS {
+    UNTIL FALSE {
+        PRINT_PARAMS().
+        WAIT 0.
+    }
+}
+
 FUNCTION DEORBIT_KERBIN {
     SAS OFF.
     WAIT 1.
@@ -65,6 +72,8 @@ FUNCTION PARACHUTE_LANDING {
         ELSE IF RUNMODE=11 {
             IF ALT:RADAR < 5000 {
                 ACT_ON_PARTS("DROGUE", "DEPLOY_CHUTE").
+                WAIT 0.
+                UNLOCK STEERING.
                 IF PARACHUTE {
                     SET RUNMODE TO 12.
                 } ELSE {
