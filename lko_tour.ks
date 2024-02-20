@@ -28,7 +28,7 @@ UNTIL RUNMODE=0 {
     }
 
     SET PITCH TO GET_PITCH_KERBIN().
-    IF STAGE:LIQUIDFUEL < 1 AND RUNMODE > 1 {
+    IF STAGE:LIQUIDFUEL < 1 AND RUNMODE > 1 AND RUNMODE < 5 {
         STAGE. WAIT 0.
     }
 
@@ -79,13 +79,20 @@ UNTIL RUNMODE=0 {
     }
 
     ELSE IF RUNMODE=5 {
-        DEORBIT_KERBIN().
+        IF USE_NODE {
+            DEORBIT_KSC_NODE().
+            NODE_EXEC().
+        } ELSE {
+            DEORBIT_KERBIN().
+        }
         ACT_ON_PARTS("VOLTAIC", "RETRACT").
         WAIT 1.
         SET WARP TO 3.
         WAIT UNTIL SHIP:ALTITUDE < 70000.
+        WAIT 1.
         ACT_ON_PARTS("SEPARATOR", "DECOUPLE").
         ACT_ON_PARTS("DECOUPLER", "DECOUPLE").
+        WAIT 1.
         SET RUNMODE TO 6.
     }
 
